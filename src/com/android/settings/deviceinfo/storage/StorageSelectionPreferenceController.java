@@ -70,7 +70,7 @@ public class StorageSelectionPreferenceController extends BasePreferenceControll
         if (storageEntries == null || storageEntries.isEmpty()) {
             return;
         }
-        Collections.sort(storageEntries);
+        Collections.sort(mStorageEntries);
         mStorageEntries.addAll(storageEntries);
         mStorageAdapter.addAll(storageEntries);
 
@@ -126,9 +126,15 @@ public class StorageSelectionPreferenceController extends BasePreferenceControll
             if (view == null) {
                 view = getDefaultView(position, view, parent);
             }
-            TextView textView = extractTextView(view);
+
+            TextView textView = null;
+            try {
+                textView = (TextView) view;
+            } catch (ClassCastException e) {
+                throw new IllegalStateException("Default view should be a TextView, ", e);
+            }
             textView.setText(getItem(position).getDescription());
-            return view;
+            return textView;
         }
 
         @Override
@@ -136,42 +142,16 @@ public class StorageSelectionPreferenceController extends BasePreferenceControll
             if (view == null) {
                 view = getDefaultDropDownView(position, view, parent);
             }
-            TextView textView = extractTextView(view);
+
+            TextView textView = null;
+            try {
+                textView = (TextView) view;
+            } catch (ClassCastException e) {
+                throw new IllegalStateException("Default drop down view should be a TextView, ", e);
+            }
             textView.setText(getItem(position).getDescription());
-            return view;
-        }
-
-        private TextView extractTextView(View root) {
-            if (root instanceof TextView) {
-                return (TextView) root;
-            }
-            // Try common ids first
-            int titleId = root.getResources().getIdentifier(
-                    "title", "id", "com.android.settingslib");
-            TextView tv = titleId != 0 ? root.findViewById(titleId) : null;
-            if (tv == null) {
-                tv = root.findViewById(android.R.id.text1);
-            }
-            if (tv == null) {
-                // Fallback: recursively find the first TextView
-                tv = findFirstTextView(root);
-            }
-            if (tv == null) {
-                throw new IllegalStateException("Spinner item view must contain a TextView");
-            }
-            return tv;
-        }
-
-        private TextView findFirstTextView(View v) {
-            if (v instanceof TextView) return (TextView) v;
-            if (v instanceof ViewGroup) {
-                ViewGroup vg = (ViewGroup) v;
-                for (int i = 0; i < vg.getChildCount(); i++) {
-                    TextView tv = findFirstTextView(vg.getChildAt(i));
-                    if (tv != null) return tv;
-                }
-            }
-            return null;
+            return textView;
         }
     }
 }
+
